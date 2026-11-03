@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#47008C" />
+<title>Share The Sweetness | Diwali 2026 – Cadbury Celebrations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --purple:#47008C; --purple-deep:#2a0054; --purple-soft:#6a1bb8;
+    --gold:#D4AF37; --gold-light:#f6e08a; --gold-dark:#a8841c;
+    --glass:rgba(71,0,140,.42); --glass-border:rgba(212,175,55,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;width:100%;overflow:hidden;background:#12002b;font-family:'Poppins',system-ui,sans-serif;color:#fff;touch-action:manipulation}
+  #stage{position:fixed;inset:0;height:100dvh;background:#12002b}
+  video#cam{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  canvas#view{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* Glass frame */
+  .frame{position:absolute;inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px;border-radius:26px;
+    border:2px solid rgba(212,175,55,.75);pointer-events:none;
+    box-shadow:inset 0 0 60px rgba(71,0,140,.65), inset 0 0 0 6px rgba(71,0,140,.28), 0 0 24px rgba(212,175,55,.25)}
+  .vignette{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom,rgba(42,0,84,.65) 0%,rgba(42,0,84,0) 22%,rgba(42,0,84,0) 70%,rgba(42,0,84,.75) 100%)}
+
+  /* Top bar */
+  .topbar{position:absolute;top:calc(max(8px,env(safe-area-inset-top)) + 10px);left:18px;right:18px;display:flex;align-items:center;gap:12px;
+    padding:10px 14px;border-radius:20px;background:var(--glass);border:1px solid var(--glass-border);
+    backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  .logo{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;overflow:hidden;
+    background:linear-gradient(145deg,var(--purple-soft),var(--purple));border:1.5px solid var(--gold)}
+  .logo img{width:100%;height:100%;object-fit:contain}
+  .titles{min-width:0;flex:1}
+  .brand{font-family:'Playfair Display',serif;font-weight:800;font-size:17px;letter-spacing:.3px;
+    background:linear-gradient(90deg,var(--gold-light),var(--gold),var(--gold-light));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+  .campaign{font-size:11.5px;font-weight:500;color:#f1e6ff;letter-spacing:.4px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .campaign b{color:var(--gold-light);font-weight:600}
+  .iconbtn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.1);color:var(--gold-light);font-size:18px;cursor:pointer;display:grid;place-items:center}
+  .iconbtn:active{transform:scale(.92)}
+
+  /* Status chip + toast */
+  .chip{position:absolute;top:calc(max(8px,env(safe-area-inset-top)) + 84px);left:50%;transform:translateX(-50%);
+    padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.4px;background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;gap:6px;align-items:center;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ffb020;box-shadow:0 0 8px #ffb020;animation:pulse 1.2s infinite}
+  .chip.ok .dot{background:#3ddc84;box-shadow:0 0 10px #3ddc84}
+  @keyframes pulse{50%{opacity:.35}}
+  .toast{position:absolute;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 122px);width:min(88vw,380px);transform:translate(-50%,-14px);opacity:0;pointer-events:none;
+    padding:12px 16px;border-radius:18px;text-align:center;font-size:13px;line-height:1.4;font-weight:500;
+    background:linear-gradient(135deg,rgba(71,0,140,.72),rgba(106,27,184,.6));border:1px solid var(--gold);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 18px rgba(212,175,55,.35);
+    transition:opacity .4s ease,transform .4s ease}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--gold-light)}
+
+  /* Shutter */
+  .bottom{position:absolute;left:0;right:0;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 22px);display:flex;justify-content:center;padding:0 22px}
+  .shutter{display:flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;border:2px solid #fff3b8;cursor:pointer;
+    font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:var(--purple-deep);letter-spacing:.2px;
+    background:linear-gradient(180deg,var(--gold-light) 0%,var(--gold) 55%,var(--gold-dark) 100%);
+    box-shadow:0 10px 28px rgba(0,0,0,.45),0 0 0 6px rgba(212,175,55,.25),inset 0 2px 0 rgba(255,255,255,.55);
+    animation:glow 2.4s ease-in-out infinite;transition:transform .12s}
+  .shutter:active{transform:scale(.95)}
+  .shutter:disabled{filter:grayscale(.6) brightness(.8);animation:none}
+  @keyframes glow{50%{box-shadow:0 10px 28px rgba(0,0,0,.45),0 0 0 12px rgba(212,175,55,.12),inset 0 2px 0 rgba(255,255,255,.55)}}
+
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  .flash.go{animation:flash .45s ease-out}
+  @keyframes flash{0%{opacity:.9}100%{opacity:0}}
+
+  /* Start / error screens */
+  .screen{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:16px;
+    background:radial-gradient(circle at 50% 30%,#6a1bb8 0%,#47008C 45%,#1d003d 100%)}
+  .screen.hidden{display:none}
+  .screen .big{font-size:64px;filter:drop-shadow(0 0 18px rgba(255,200,60,.8));animation:float 3s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-8px)}}
+  .screen h1{font-family:'Playfair Display',serif;font-size:30px;line-height:1.15;
+    background:linear-gradient(90deg,var(--gold-light),var(--gold),var(--gold-light));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .screen p{font-size:14px;max-width:320px;line-height:1.5;color:#eadcff}
+  .screen small{font-size:11px;color:#bda4e6;max-width:300px}
+  .err{color:#ffd1d1;font-weight:500}
+
+  /* Modal */
+  .modal{position:absolute;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:18px;
+    background:rgba(20,0,45,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .modal.open{display:flex}
+  .card{width:min(94vw,420px);max-height:96dvh;overflow:auto;border-radius:26px;padding:16px;background:linear-gradient(160deg,rgba(106,27,184,.55),rgba(42,0,84,.85));
+    border:1.5px solid var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 30px rgba(212,175,55,.25);animation:pop .35s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes pop{from{transform:scale(.85);opacity:0}}
+  .card h2{font-family:'Playfair Display',serif;font-size:20px;text-align:center;margin-bottom:10px;color:var(--gold-light)}
+  .card img{width:100%;border-radius:16px;display:block;border:2px solid var(--gold);max-height:58dvh;object-fit:contain;background:#000}
+  .wish{font-size:12.5px;text-align:center;margin:12px 4px 4px;color:#f3e9ff;line-height:1.45}
+  .actions{display:grid;gap:10px;margin-top:12px}
+  .btn{padding:14px;border-radius:14px;border:none;font-family:'Poppins',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn:active{transform:scale(.97)}
+  .btn.gold{background:linear-gradient(180deg,var(--gold-light),var(--gold) 60%,var(--gold-dark));color:var(--purple-deep)}
+  .btn.wa{background:#25D366;color:#053b1c}
+  .btn.ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="cam" playsinline muted autoplay></video>
+  <canvas id="view"></canvas>
+  <div class="vignette"></div>
+  <div class="frame"></div>
+
+  <header class="topbar">
+    <div class="logo" id="logoBox">
+      <!-- To use the official licensed logo, set CONFIG.LOGO_URL in the script below -->
+      <svg id="logoFallback" viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
+        <rect x="6" y="16" width="28" height="18" rx="3" fill="#47008C" stroke="#D4AF37" stroke-width="2"/>
+        <rect x="4" y="11" width="32" height="7" rx="2" fill="#6a1bb8" stroke="#D4AF37" stroke-width="2"/>
+        <rect x="18" y="11" width="4" height="23" fill="#D4AF37"/>
+        <circle cx="20" cy="8" r="3" fill="#D4AF37"/>
+      </svg>
+    </div>
+    <div class="titles">
+      <div class="brand">Cadbury Celebrations</div>
+      <div class="campaign"><b>Share The Sweetness</b> | Diwali 2026</div>
+    </div>
+    <button class="iconbtn" id="flipBtn" title="Switch camera" aria-label="Switch camera">⟲</button>
+  </header>
+
+  <div class="chip" id="chip"><span class="dot"></span><span id="chipText">Scanning for faces…</span></div>
+  <div class="toast" id="toast"><b>Face Detected!</b> Tap below to snap your festive photo and reveal your custom Cadbury wish.</div>
+
+  <div class="bottom">
+    <button class="shutter" id="shutter" disabled>📸 Take Diwali Memory Photo</button>
+  </div>
+  <div class="flash" id="flash"></div>
+
+  <section class="screen" id="startScreen">
+    <div class="big">🪔</div>
+    <h1>Share The Sweetness<br/>Diwali 2026</h1>
+    <p>Step into the festive frame with Cadbury Celebrations. Allow camera access, show your smile and reveal your personal Diwali wish.</p>
+    <button class="shutter" id="startBtn" style="animation:none">✨ Start Celebrating</button>
+    <small>Your camera feed stays on your device. Nothing is uploaded.</small>
+  </section>
+
+  <section class="screen hidden" id="errScreen">
+    <div class="big">📷</div>
+    <h1>Camera Unavailable</h1>
+    <p class="err" id="errMsg"></p>
+    <button class="shutter" id="retryBtn" style="animation:none">Try Again</button>
+    <small>Tip: this page must be opened over HTTPS (GitHub Pages works) and camera permission must be allowed in your browser settings.</small>
+  </section>
+
+  <div class="modal" id="modal">
+    <div class="card">
+      <h2>🪔 Your Diwali Memory</h2>
+      <img id="previewImg" alt="Your Diwali photo" />
+      <div class="wish" id="wishText"></div>
+      <div class="actions">
+        <button class="btn gold" id="dlBtn">⬇️ Download Photo</button>
+        <button class="btn wa" id="waBtn">💬 Share on WhatsApp</button>
+        <button class="btn ghost" id="closeBtn">↺ Retake</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================== CONFIG ============================== */
+const CONFIG = {
+  LOGO_URL: '',            // Optional: path/URL to your licensed Cadbury Celebrations logo (PNG/SVG)
+  COLORS: { purple:'#47008C', purpleDeep:'#2a0054', purpleSoft:'#6a1bb8', gold:'#D4AF37', goldLight:'#f6e08a', goldDark:'#a8841c' },
+  SLOGANS: [
+    'Kuch Meetha Ho Jaaye — Iss Diwali, Har Rishte Mein Ghulayen Mithaas! 🪔',
+    'Har Dil Hua Cadbury — Celebrating Family, Neighbors, and Every Sweet Connection! ✨',
+    'Rishton Ki Mithaas, Cadbury Ke Saath — Happy Diwali to Our Favorite Neighbor! 🎁',
+    'Dil Se Dil Tak, Mithaas Ka Safar — Wishing Your Loved Ones Endless Joy! 🪔',
+    'Iss Baar Diwali Par, Kuch Dil Se Bhejo, Kuch Cadbury Se Raho Connected! 💜'
+  ],
+  LIVE_BANNER: 'Tap 📸 to reveal your Cadbury wish ✨',
+  CAPTURE_WIDTH: 1080,
+  DETECT_INTERVAL_MS: 70,
+  FACE_GRACE_MS: 450,
+  MP_VERSION: '0.10.14'
+};
+const C = CONFIG.COLORS;
+
+/* ============================== DOM ============================== */
+const $ = id => document.getElementById(id);
+const video = $('cam'), canvas = $('view'), ctx = canvas.getContext('2d');
+const chip = $('chip'), chipText = $('chipText'), toast = $('toast');
+const shutter = $('shutter'), flashEl = $('flash');
+
+if (CONFIG.LOGO_URL) {
+  const img = new Image(); img.src = CONFIG.LOGO_URL; img.alt = 'Cadbury Celebrations';
+  img.onload = () => { $('logoFallback').remove(); $('logoBox').appendChild(img); };
+}
+
+/* ============================== STATE ============================== */
+const state = {
+  facing: 'user', mirror: true, stream: null, ready: false,
+  detector: null, detectorKind: 'none', detecting: false, lastDetect: 0,
+  face: null,            // smoothed face rect in VIDEO pixel coords {x,y,w,h}
+  lastSeen: 0, alpha: 0, // overlay fade
+  anchorMode: false,
+  sloganIdx: -1, lastBlob: null, lastSlogan: '', lastUrl: null
+};
+
+/* ============================== UTILS ============================== */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function rr(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function goldGrad(c, x0, y0, x1, y1) {
+  const g = c.createLinearGradient(x0, y0, x1, y1);
+  g.addColorStop(0, C.goldLight); g.addColorStop(.45, C.gold); g.addColorStop(.7, C.goldLight); g.addColorStop(1, C.goldDark);
+  return g;
+}
+function wrap(c, text, maxW) {
+  const words = text.split(' '), lines = []; let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (c.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function showToast(on) { toast.classList.toggle('show', on); }
+
+/* ============================== CAMERA ============================== */
+async function startCamera(facing = state.facing) {
+  stopCamera();
+  const portrait = innerHeight > innerWidth;
+  const size = portrait ? { width: { ideal: 1080 }, height: { ideal: 1920 } } : { width: { ideal: 1920 }, height: { ideal: 1080 } };
+  const other = facing === 'user' ? 'environment' : 'user';
+  const attempts = [
+    { video: { facingMode: { ideal: facing }, ...size }, audio: false },
+    { video: { facingMode: { ideal: other } }, audio: false },
+    { video: true, audio: false }
+  ];
+  let stream = null, lastErr = null;
+  for (const c of attempts) {
+    try { stream = await navigator.mediaDevices.getUserMedia(c); break; }
+    catch (e) { lastErr = e; if (e.name === 'NotAllowedError' || e.name === 'SecurityError') break; }
+  }
+  if (!stream) throw lastErr || new Error('No camera found');
+
+  state.stream = stream;
+  const track = stream.getVideoTracks()[0];
+  const st = track.getSettings ? track.getSettings() : {};
+  const fm = st.facingMode;
+  state.facing = fm ? (fm === 'user' ? 'user' : 'environment') : facing; // desktop webcams report none
+  state.mirror = fm ? fm === 'user' : facing === 'user';
+  video.srcObject = stream;
+  await video.play();
+  if (!video.videoWidth) await new Promise(r => video.addEventListener('loadedmetadata', r, { once: true }));
+  state.ready = true; state.face = null; state.alpha = 0;
+}
+function stopCamera() {
+  state.ready = false;
+  if (state.stream) state.stream.getTracks().forEach(t => t.stop());
+  state.stream = null;
+}
+
+/* ============================== FACE DETECTION ============================== */
+async function initDetector() {
+  // 1) Native Shape Detection API (Chrome Android / some desktop builds)
+  try {
+    if ('FaceDetector' in window) {
+      const fd = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
+      await fd.detect(video); // throws if unsupported at runtime
+      state.detector = async v => (await fd.detect(v)).map(f => ({ x: f.boundingBox.x, y: f.boundingBox.y, w: f.boundingBox.width, h: f.boundingBox.height }));
+      state.detectorKind = 'native'; return;
+    }
+  } catch (e) { /* fall through */ }
+
+  // 2) MediaPipe Tasks Vision via CDN (works on iOS Safari + Android Chrome)
+  try {
+    const base = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${CONFIG.MP_VERSION}`;
+    const vision = await import(`${base}/vision_bundle.mjs`);
+    const fileset = await vision.FilesetResolver.forVisionTasks(`${base}/wasm`);
+    const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
+    let det;
+    try {
+      det = await vision.FaceDetector.createFromOptions(fileset, { baseOptions: { modelAssetPath, delegate: 'GPU' }, runningMode: 'VIDEO', minDetectionConfidence: 0.5 });
+    } catch (e) {
+      det = await vision.FaceDetector.createFromOptions(fileset, { baseOptions: { modelAssetPath, delegate: 'CPU' }, runningMode: 'VIDEO', minDetectionConfidence: 0.5 });
+    }
+    let lastTs = 0;
+    state.detector = async v => {
+      const ts = Math.max(performance.now(), lastTs + 1); lastTs = ts;
+      const res = det.detectForVideo(v, ts);
+      return (res.detections || []).filter(d => d.boundingBox).map(d => ({ x: d.boundingBox.originX, y: d.boundingBox.originY, w: d.boundingBox.width, h: d.boundingBox.height }));
+    };
+    state.detectorKind = 'mediapipe'; return;
+  } catch (e) { console.warn('MediaPipe unavailable', e); }
+
+  // 3) Fallback: fixed bounding anchor (align your face with the oval)
+  state.detector = null; state.detectorKind = 'anchor'; state.anchorMode = true;
+}
+
+async function runDetection(now) {
+  if (!state.detector || state.detecting || !state.ready) return;
+  if (now - state.lastDetect < CONFIG.DETECT_INTERVAL_MS) return;
+  state.detecting = true; state.lastDetect = now;
+  try {
+    const faces = await state.detector(video);
+    if (faces.length) {
+      faces.sort((a, b) => b.w * b.h - a.w * a.h);
+      const f = faces[0];
+      // slightly expand the tight BlazeFace box to include forehead/hairline
+      const grow = 0.12, nf = { x: f.x - f.w * grow / 2, y: f.y - f.h * grow, w: f.w * (1 + grow), h: f.h * (1 + grow) };
+      state.face = state.face ? { x: lerp(state.face.x, nf.x, .4), y: lerp(state.face.y, nf.y, .4), w: lerp(state.face.w, nf.w, .4), h: lerp(state.face.h, nf.h, .4) } : nf;
+      state.lastSeen = now;
+    }
+  } catch (e) { /* ignore transient errors */ }
+  state.detecting = false;
+}
+
+/* ============================== GEOMETRY ============================== */
+function coverMap(W, H) {
+  const vw = video.videoWidth || 1, vh = video.videoHeight || 1;
+  const s = Math.max(W / vw, H / vh);
+  return { s, ox: (W - vw * s) / 2, oy: (H - vh * s) / 2, vw, vh };
+}
+function faceRectFor(W, H) {
+  if (state.anchorMode) {
+    const fw = W * 0.42, fh = fw * 1.25;
+    return { x: W / 2 - fw / 2, y: H * 0.2, w: fw, h: fh };
+  }
+  if (!state.face) return null;
+  const m = coverMap(W, H), f = state.face;
+  let x = f.x * m.s + m.ox; const y = f.y * m.s + m.oy, w = f.w * m.s, h = f.h * m.s;
+  if (state.mirror) x = W - x - w;
+  return { x, y, w, h };
+}
+
+/* ============================== DRAWING ============================== */
+function drawVideo(c, W, H) {
+  const m = coverMap(W, H);
+  c.save();
+  if (state.mirror) { c.translate(W, 0); c.scale(-1, 1); }
+  c.drawImage(video, m.ox, m.oy, m.vw * m.s, m.vh * m.s);
+  c.restore();
+}
+
+function sparkle(c, x, y, r, rot, a) {
+  c.save(); c.translate(x, y); c.rotate(rot); c.globalAlpha = a;
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, r * 2.2);
+  g.addColorStop(0, 'rgba(255,240,170,.95)'); g.addColorStop(.35, 'rgba(255,200,60,.45)'); g.addColorStop(1, 'rgba(255,170,0,0)');
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, r * 2.2, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#fff6c9'; c.beginPath();
+  c.moveTo(0, -r); c.quadraticCurveTo(r * .14, -r * .14, r, 0); c.quadraticCurveTo(r * .14, r * .14, 0, r);
+  c.quadraticCurveTo(-r * .14, r * .14, -r, 0); c.quadraticCurveTo(-r * .14, -r * .14, 0, -r); c.fill();
+  c.restore();
+}
+
+function diya(c, x, y, s, t, ph) {
+  c.save(); c.translate(x, y);
+  // glow
+  const flick = 1 + .14 * Math.sin(t * 9 + ph) + .06 * Math.sin(t * 17 + ph * 2);
+  c.globalCompositeOperation = 'lighter';
+  let g = c.createRadialGradient(0, -s * .55, 0, 0, -s * .55, s * 2.6 * flick);
+  g.addColorStop(0, 'rgba(255,190,60,.65)'); g.addColorStop(1, 'rgba(255,120,0,0)');
+  c.fillStyle = g; c.beginPath(); c.arc(0, -s * .55, s * 2.6 * flick, 0, Math.PI * 2); c.fill();
+  c.globalCompositeOperation = 'source-over';
+  // bowl
+  const bg = c.createLinearGradient(-s, 0, s, s);
+  bg.addColorStop(0, '#f6c24a'); bg.addColorStop(.5, '#d98a1f'); bg.addColorStop(1, '#8c4a0c');
+  c.fillStyle = bg; c.beginPath();
+  c.moveTo(-s * 1.1, -s * .05);
+  c.quadraticCurveTo(-s * .9, s * .95, 0, s * .95);
+  c.quadraticCurveTo(s * .9, s * .95, s * 1.1, -s * .05);
+  c.quadraticCurveTo(0, s * .25, -s * 1.1, -s * .05); c.fill();
+  c.strokeStyle = '#ffe28a'; c.lineWidth = Math.max(1, s * .07);
+  c.beginPath(); c.ellipse(0, -s * .05, s * 1.1, s * .24, 0, 0, Math.PI * 2); c.stroke();
+  c.fillStyle = '#7a3a06'; c.beginPath(); c.ellipse(0, -s * .05, s * .98, s * .17, 0, 0, Math.PI * 2); c.fill();
+  // flame
+  c.save(); c.translate(0, -s * .1); c.scale(1, flick); c.rotate(Math.sin(t * 5 + ph) * .06);
+  const fg = c.createLinearGradient(0, -s * 1.3, 0, 0);
+  fg.addColorStop(0, '#fff7c2'); fg.addColorStop(.5, '#ffb52e'); fg.addColorStop(1, '#ff6a00');
+  c.fillStyle = fg; c.beginPath(); c.moveTo(0, -s * 1.4);
+  c.bezierCurveTo(s * .55, -s * .8, s * .45, -s * .1, 0, 0);
+  c.bezierCurveTo(-s * .45, -s * .1, -s * .55, -s * .8, 0, -s * 1.4); c.fill();
+  c.restore(); c.restore();
+}
+
+function drawGiftBox(c, x, y, w, h, t) {
+  const lidH = h * .3, topH = h * .13, bodyY = y + topH + lidH, bodyH = h - topH - lidH;
+  // ground shadow
+  c.save(); c.fillStyle = 'rgba(0,0,0,.35)'; c.filter = 'blur(' + Math.max(2, w * .02) + 'px)';
+  c.beginPath(); c.ellipse(x + w / 2, y + h + h * .03, w * .5, h * .06, 0, 0, Math.PI * 2); c.fill(); c.restore();
+
+  // body
+  let g = c.createLinearGradient(x, bodyY, x + w, bodyY + bodyH);
+  g.addColorStop(0, '#5b0cb0'); g.addColorStop(.5, C.purple); g.addColorStop(1, '#2f0060');
+  c.fillStyle = g; rr(c, x + w * .015, bodyY, w * .97, bodyH, w * .025); c.fill();
+  c.strokeStyle = goldGrad(c, x, bodyY, x + w, bodyY + bodyH); c.lineWidth = Math.max(2, w * .012); c.stroke();
+
+  // diwali diamond trim along bottom
+  c.fillStyle = goldGrad(c, x, 0, x + w, 0);
+  const n = 14, step = (w * .9) / n;
+  for (let i = 0; i < n; i++) {
+    const px = x + w * .05 + step * (i + .5), py = bodyY + bodyH - h * .085, d = Math.min(step * .22, h * .045);
+    c.beginPath(); c.moveTo(px, py - d); c.lineTo(px + d, py); c.lineTo(px, py + d); c.lineTo(px - d, py); c.closePath(); c.fill();
+  }
+  c.fillRect(x + w * .05, bodyY + h * .05, w * .9, Math.max(1.5, w * .006));
+
+  // lid top face (lighter, perspective)
+  g = c.createLinearGradient(x, y, x + w, y + topH);
+  g.addColorStop(0, '#8a3de0'); g.addColorStop(1, '#5b0cb0');
+  c.fillStyle = g; c.beginPath();
+  c.moveTo(x + w * .1, y); c.lineTo(x + w * .9, y); c.lineTo(x + w * 1.01, y + topH); c.lineTo(x - w * .01, y + topH); c.closePath(); c.fill();
+  c.strokeStyle = goldGrad(c, x, y, x + w, y); c.lineWidth = Math.max(1.5, w * .008); c.stroke();
+
+  // lid front
+  g = c.createLinearGradient(x, y + topH, x, y + topH + lidH);
+  g.addColorStop(0, '#6a1bb8'); g.addColorStop(1, C.purple);
+  c.fillStyle = g; rr(c, x - w * .01, y + topH, w * 1.02, lidH, w * .02); c.fill();
+  c.strokeStyle = goldGrad(c, x, y, x + w, y + h); c.lineWidth = Math.max(2, w * .014); c.stroke();
+
+  // gold ribbon (vertical)
+  const rw = w * .13, rx = x + w / 2 - rw / 2;
+  c.fillStyle = goldGrad(c, rx, 0, rx + rw, 0);
+  c.fillRect(rx, y + topH, rw, lidH + bodyH * .98);
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(rx + rw * .15, y + topH, rw * .12, lidH + bodyH * .98);
+  // ribbon on top face
+  c.fillStyle = goldGrad(c, rx, 0, rx + rw, 0);
+  c.beginPath(); c.moveTo(rx + rw * .1, y); c.lineTo(rx + rw * .9, y); c.lineTo(rx + rw * 1.05, y + topH); c.lineTo(rx - rw * .05, y + topH); c.fill();
+
+  // bow
+  const bx = x + w / 2, by = y + topH * .1, bs = w * .1;
+  for (const dir of [-1, 1]) {
+    c.save(); c.translate(bx, by); c.scale(dir, 1); c.rotate(-.35);
+    const bgx = c.createLinearGradient(0, -bs, bs * 1.5, bs * .5);
+    bgx.addColorStop(0, C.goldLight); bgx.addColorStop(1, C.goldDark);
+    c.fillStyle = bgx; c.beginPath(); c.ellipse(bs * .85, -bs * .35, bs * .85, bs * .5, -.25, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = C.goldDark; c.lineWidth = Math.max(1, bs * .08); c.stroke();
+    c.fillStyle = 'rgba(71,0,140,.35)'; c.beginPath(); c.ellipse(bs * .85, -bs * .35, bs * .4, bs * .22, -.25, 0, Math.PI * 2); c.fill();
+    c.restore();
+  }
+  c.fillStyle = goldGrad(c, bx - bs * .3, by - bs * .3, bx + bs * .3, by + bs * .3);
+  c.beginPath(); c.arc(bx, by, bs * .3, 0, Math.PI * 2); c.fill();
+
+  // label plate
+  const pw = w * .5, ph = bodyH * .66, px = x + w / 2 - pw / 2, py = bodyY + bodyH * .16;
+  g = c.createLinearGradient(px, py, px + pw, py + ph);
+  g.addColorStop(0, '#3d0078'); g.addColorStop(1, '#210045');
+  c.fillStyle = g; rr(c, px, py, pw, ph, pw * .09); c.fill();
+  c.strokeStyle = goldGrad(c, px, py, px + pw, py + ph); c.lineWidth = Math.max(2, w * .012); c.stroke();
+  c.strokeStyle = 'rgba(212,175,55,.55)'; c.lineWidth = Math.max(1, w * .004);
+  rr(c, px + pw * .04, py + ph * .06, pw * .92, ph * .88, pw * .07); c.stroke();
+
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = C.goldLight; c.font = `600 ${pw * .09}px "Poppins",sans-serif`;
+  c.fillText('C A D B U R Y', px + pw / 2, py + ph * .24);
+  c.fillStyle = goldGrad(c, px, py, px + pw, py); c.font = `italic 800 ${pw * .185}px "Playfair Display",serif`;
+  c.fillText('Celebrations', px + pw / 2, py + ph * .5);
+  c.fillStyle = C.goldLight; c.font = `600 ${pw * .075}px "Poppins",sans-serif`;
+  c.fillText('✦ DIWALI 2026 ✦', px + pw / 2, py + ph * .76);
+}
+
+function drawBanner(c, cx, y, bw, lines, fs, lh, bh) {
+  const x = cx - bw / 2;
+  // ribbon tails
+  c.fillStyle = '#2a0054';
+  c.beginPath(); c.moveTo(x - fs * .6, y + bh * .15); c.lineTo(x + fs * .4, y + bh * .15); c.lineTo(x + fs * .4, y + bh); c.lineTo(x - fs * .6, y + bh); c.lineTo(x - fs * .2, y + bh * .58); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(x + bw + fs * .6, y + bh * .15); c.lineTo(x + bw - fs * .4, y + bh * .15); c.lineTo(x + bw - fs * .4, y + bh); c.lineTo(x + bw + fs * .6, y + bh); c.lineTo(x + bw + fs * .2, y + bh * .58); c.closePath(); c.fill();
+  // main
+  const g = c.createLinearGradient(x, y, x, y + bh);
+  g.addColorStop(0, 'rgba(106,27,184,.96)'); g.addColorStop(1, 'rgba(50,0,100,.97)');
+  c.fillStyle = g; rr(c, x, y, bw, bh, fs * .55); c.fill();
+  c.strokeStyle = goldGrad(c, x, y, x + bw, y + bh); c.lineWidth = Math.max(2, fs * .12); c.stroke();
+  c.strokeStyle = 'rgba(246,224,138,.5)'; c.lineWidth = 1; rr(c, x + fs * .22, y + fs * .22, bw - fs * .44, bh - fs * .44, fs * .4); c.stroke();
+
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = `700 ${fs}px "Playfair Display",serif`;
+  const startY = y + bh / 2 - (lines.length - 1) * lh / 2;
+  lines.forEach((ln, i) => {
+    const ty = startY + i * lh;
+    c.lineWidth = fs * .14; c.strokeStyle = 'rgba(30,0,60,.9)'; c.lineJoin = 'round'; c.strokeText(ln, cx, ty);
+    const half = Math.min(bw / 2, c.measureText(ln).width / 2);
+    c.fillStyle = goldGrad(c, cx - half, ty - fs / 2, cx + half, ty + fs / 2); c.fillText(ln, cx, ty);
+  });
+}
+
+function drawOverlay(c, W, H, opts) {
+  const { capture, slogan, t } = opts;
+  const face = faceRectFor(W, H);
+  const a = capture ? 1 : state.alpha;
+  if (!face || a <= 0.01) return;
+  c.save(); c.globalAlpha = a;
+
+  const cx = face.x + face.w / 2, cy = face.y + face.h * .45;
+
+  // ---- layout: gift box + banner under chin ----
+  let boxW = clamp(face.w * 2.2, W * .42, W * .92);
+  let L;
+  for (let i = 0; i < 2; i++) {
+    const boxH = boxW * .52, top = face.y + face.h + face.h * .1;
+    const fs = boxW * .06, lh = fs * 1.34;
+    c.font = `700 ${fs}px "Playfair Display",serif`;
+    const bw = Math.min(boxW * 1.12, W * .96);
+    const lines = wrap(c, slogan, bw - fs * 1.8);
+    const bh = lines.length * lh + fs * 1.15, gap = boxH * .07;
+    const total = boxH + gap + bh, limit = H * .9;
+    L = { boxW, boxH, top, fs, lh, bw, lines, bh, gap };
+    if (top + total <= limit) break;
+    boxW = Math.max(W * .34, boxW * (limit - top) / total);
+  }
+  const bx = clamp(cx - L.boxW / 2, 4, W - L.boxW - 4);
+  const boxCx = bx + L.boxW / 2;
+
+  // soft golden halo behind head
+  c.save(); c.globalCompositeOperation = 'lighter';
+  const hg = c.createRadialGradient(cx, cy, face.w * .3, cx, cy, face.w * 1.35);
+  hg.addColorStop(0, 'rgba(255,200,80,0)'); hg.addColorStop(.7, 'rgba(255,190,60,.18)'); hg.addColorStop(1, 'rgba(255,170,40,0)');
+  c.fillStyle = hg; c.beginPath(); c.arc(cx, cy, face.w * 1.35, 0, Math.PI * 2); c.fill(); c.restore();
+
+  // gift box (gentle float)
+  const bob = Math.sin(t * 2) * L.boxH * .015;
+  drawGiftBox(c, bx, L.top + bob, L.boxW, L.boxH, t);
+  drawBanner(c, boxCx, L.top + L.boxH + L.gap, L.bw, L.lines, L.fs, L.lh, L.bh);
+
+  // diyas flanking the box
+  const ds = clamp(face.w * .13, 8, 40);
+  diya(c, bx - ds * .3, L.top + L.boxH * .92 + Math.sin(t * 2.3) * ds * .1, ds, t, 0);
+  diya(c, bx + L.boxW + ds * .3, L.top + L.boxH * .92 + Math.sin(t * 2.3 + 1) * ds * .1, ds, t, 2.1);
+
+  // diyas orbiting upper arc of the head
+  const orbitRx = face.w * .95, orbitRy = face.h * .85;
+  [-150, -118, -62, -30].forEach((deg, i) => {
+    const ang = deg * Math.PI / 180 + Math.sin(t * .8 + i) * .05;
+    const dx = cx + Math.cos(ang) * orbitRx, dy = cy + Math.sin(ang) * orbitRy + Math.sin(t * 1.7 + i * 1.3) * ds * .25;
+    diya(c, dx, dy, ds * .75, t, i * 1.7);
+  });
+
+  // golden sparkles orbiting the head
+  c.save(); c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 34; i++) {
+    const seed = i * 12.9898, sp = .25 + (i % 5) * .08, ph = seed % (Math.PI * 2);
+    const ang = t * sp * (i % 2 ? 1 : -1) + ph;
+    const rx = face.w * (.72 + (i % 7) * .07), ry = face.h * (.68 + (i % 6) * .07);
+    const px = cx + Math.cos(ang) * rx, py = cy + Math.sin(ang) * ry - face.h * .05;
+    const tw = .5 + .5 * Math.sin(t * (2 + (i % 4)) + ph);
+    sparkle(c, px, py, face.w * (.025 + (i % 4) * .012) * (.6 + tw * .7), t * .8 + ph, .35 + tw * .65);
+  }
+  // falling embers near the box
+  for (let i = 0; i < 14; i++) {
+    const k = ((t * .18 + i * .137) % 1), px = bx + ((i * 0.31 + .07) % 1) * L.boxW;
+    const py = L.top - k * face.h * .9 + L.boxH * .2;
+    sparkle(c, px, py, face.w * .02, k * 6 + i, (1 - k) * .9);
+  }
+  c.restore();
+  c.restore();
+}
+
+function drawGuide(c, W, H, t) {
+  if (!state.anchorMode) return;
+  const f = faceRectFor(W, H);
+  c.save(); c.setLineDash([10, 8]); c.lineDashOffset = -t * 20;
+  c.strokeStyle = 'rgba(246,224,138,.85)'; c.lineWidth = 3;
+  c.beginPath(); c.ellipse(f.x + f.w / 2, f.y + f.h / 2, f.w / 2, f.h / 2, 0, 0, Math.PI * 2); c.stroke();
+  c.restore();
+}
+
+function drawCaptureChrome(c, W, H) {
+  const b = W * .014;
+  c.save(); c.strokeStyle = goldGrad(c, 0, 0, W, H); c.lineWidth = b; c.strokeRect(b / 2, b / 2, W - b, H - b);
+  c.strokeStyle = 'rgba(71,0,140,.9)'; c.lineWidth = b * .45; c.strokeRect(b * 1.3, b * 1.3, W - b * 2.6, H - b * 2.6);
+  const fs = W * .036; c.font = `700 ${fs}px "Playfair Display",serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const txt = 'Cadbury Celebrations  •  Share The Sweetness | Diwali 2026';
+  const tw = c.measureText(txt).width + fs * 1.6;
+  c.fillStyle = 'rgba(42,0,84,.72)'; rr(c, W / 2 - tw / 2, b * 2.4, tw, fs * 1.9, fs); c.fill();
+  c.strokeStyle = C.gold; c.lineWidth = 1.5; c.stroke();
+  c.lineWidth = fs * .1; c.strokeStyle = 'rgba(30,0,60,.9)'; c.strokeText(txt, W / 2, b * 2.4 + fs * .95);
+  c.fillStyle = goldGrad(c, W * .1, 0, W * .9, 0); c.fillText(txt, W / 2, b * 2.4 + fs * .95);
+  c.restore();
+}
+
+/* ============================== MAIN LOOP ============================== */
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
+}
+addEventListener('resize', resize); resize();
+
+let faceShown = false, lastToastHide = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const W = canvas.width, H = canvas.height, t = now / 1000;
+  ctx.clearRect(0, 0, W, H);
+  if (!state.ready) return;
+
+  runDetection(now);
+
+  const visible = state.anchorMode || (state.face && now - state.lastSeen < CONFIG.FACE_GRACE_MS);
+  state.alpha = lerp(state.alpha, visible ? 1 : 0, .14);
+
+  drawVideo(ctx, W, H);
+  drawGuide(ctx, W, H, t);
+  const wish = CONFIG.LIVE_BANNER;
+  drawOverlay(ctx, W, H, { capture: false, slogan: wish, t });
+
+  // UI state
+  if (visible !== faceShown) {
+    faceShown = visible;
+    shutter.disabled = !visible && !state.anchorMode;
+    chip.classList.toggle('ok', visible);
+    chipText.textContent = state.anchorMode ? 'Align your face with the oval' : visible ? 'Face detected' : 'Scanning for faces…';
+    if (visible && !state.anchorMode) { showToast(true); clearTimeout(lastToastHide); lastToastHide = setTimeout(() => showToast(false), 4500); }
+    if (!visible) showToast(false);
+  }
+}
+requestAnimationFrame(loop);
+
+/* ============================== CAPTURE ============================== */
+function nextSlogan() {
+  state.sloganIdx = (state.sloganIdx + 1) % CONFIG.SLOGANS.length;
+  return CONFIG.SLOGANS[state.sloganIdx];
+}
+
+async function capturePhoto() {
+  if (!state.ready) return;
+  const slogan = nextSlogan();
+  flashEl.classList.remove('go'); void flashEl.offsetWidth; flashEl.classList.add('go');
+  if (navigator.vibrate) navigator.vibrate(40);
+
+  const W = CONFIG.CAPTURE_WIDTH, H = Math.round(W * (canvas.height / canvas.width));
+  const off = document.createElement('canvas'); off.width = W; off.height = H;
+  const c = off.getContext('2d');
+  c.fillStyle = '#12002b'; c.fillRect(0, 0, W, H);
+  drawVideo(c, W, H);
+  // freeze alpha to full so the box is always stamped in the photo
+  drawOverlay(c, W, H, { capture: true, slogan, t: performance.now() / 1000 });
+  drawCaptureChrome(c, W, H);
+
+  const blob = await new Promise(res => off.toBlob(res, 'image/jpeg', 0.92));
+  if (!blob) return;
+  if (state.lastUrl) URL.revokeObjectURL(state.lastUrl);
+  state.lastBlob = blob; state.lastSlogan = slogan; state.lastUrl = URL.createObjectURL(blob);
+  $('previewImg').src = state.lastUrl;
+  $('wishText').textContent = slogan;
+  setTimeout(() => $('modal').classList.add('open'), 280);
+}
+
+function downloadPhoto() {
+  if (!state.lastUrl) return;
+  const a = document.createElement('a');
+  a.href = state.lastUrl; a.download = 'cadbury-diwali-2026-memory.jpg';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+async function shareWhatsApp() {
+  if (!state.lastBlob) return;
+  const text = `${state.lastSlogan}\n#ShareTheSweetness #CadburyCelebrations #Diwali2026`;
+  const file = new File([state.lastBlob], 'cadbury-diwali-2026-memory.jpg', { type: 'image/jpeg' });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text, title: 'Share The Sweetness | Diwali 2026' });
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  // Fallback: save the image, then open WhatsApp with the wish text
+  downloadPhoto();
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+/* ============================== EVENTS ============================== */
+async function boot() {
+  $('errScreen').classList.add('hidden');
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('This browser does not support camera access. Please use Safari (iOS) or Chrome (Android).');
+    await startCamera(state.facing);
+    $('startScreen').classList.add('hidden');
+    try { await Promise.all([document.fonts.load('700 20px "Playfair Display"'), document.fonts.load('italic 800 20px "Playfair Display"'), document.fonts.load('600 14px "Poppins"')]); } catch (e) {}
+    if (!state.detector && state.detectorKind === 'none') {
+      chipText.textContent = 'Loading face detection…';
+      await initDetector();
+      if (state.anchorMode) { chipText.textContent = 'Align your face with the oval'; shutter.disabled = false; }
+      else chipText.textContent = 'Scanning for faces…';
+    }
+  } catch (e) {
+    console.error(e);
+    $('startScreen').classList.add('hidden');
+    $('errMsg').textContent = e.name === 'NotAllowedError' ? 'Camera permission was denied. Please allow camera access and try again.' : (e.message || 'Could not start the camera.');
+    $('errScreen').classList.remove('hidden');
+  }
+}
+
+$('startBtn').addEventListener('click', boot);
+$('retryBtn').addEventListener('click', boot);
+$('flipBtn').addEventListener('click', async () => {
+  const next = state.facing === 'user' ? 'environment' : 'user';
+  try { await startCamera(next); } catch (e) { try { await startCamera(state.facing); } catch (_) {} }
+});
+shutter.addEventListener('click', capturePhoto);
+$('dlBtn').addEventListener('click', downloadPhoto);
+$('waBtn').addEventListener('click', shareWhatsApp);
+$('closeBtn').addEventListener('click', () => $('modal').classList.remove('open'));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.stream && video.paused) video.play().catch(() => {});
+});
+})();
+</script>
+</body>
+</html>
